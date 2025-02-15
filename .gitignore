@@ -1,0 +1,56 @@
+# Xcode
+.DS_Store
+*/build/
+*.xcuserstate
+xcuserdata/
+.idea/
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+
+# CocoaPods
+Pods/
+*.lock
+*.xcscmblueprint
+
+# Swift Package Manager
+/.build
+/Package.resolved
+
+# Carthage
+Carthage/
+
+# Archives
+*.xcarchive
+
+# Derived Data
+DerivedData/
+
+# Logs
+*.log
+
+# Temporary files
+*.swp
+*.swo
+*.swn
+
+# Ignore module cache
+*.modulemap
+
+# Git
+*.orig
+
+# Env files
+*.env
+
+# Other
+*.plist
+*.crt
+*.pem
+*.p12
+*.key
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output

@@ -1,0 +1,6 @@
+framework module SDDLSDK {
+  umbrella header "SDDLSDK.h"
+
+  export *
+  module * { export * }
+}
