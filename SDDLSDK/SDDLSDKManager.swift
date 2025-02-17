@@ -12,9 +12,11 @@ public class SDDLSDKManager {
                 identifier = path.replacingOccurrences(of: "/", with: "")
             }
         }
-
-        if identifier == nil, let clipboardText = UIPasteboard.general.string, !clipboardText.isEmpty {
-            identifier = clipboardText
+        
+        if identifier == nil, UIPasteboard.general.hasStrings {
+            if let clipboardText = UIPasteboard.general.string, !clipboardText.isEmpty {
+                identifier = clipboardText
+            }
         }
 
         guard let id = identifier else {
@@ -39,6 +41,10 @@ public class SDDLSDKManager {
                     DispatchQueue.main.async {
                         completion(nil)
                     }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(nil)
                 }
             }
         }
