@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = 'SDDLSDK'
-  spec.version      = '1.0.20'
+  spec.version      = '1.0.21'
   spec.summary      = 'iOS SDK for SDDL deep links integration'
   spec.description  = 'SDDLSDK helps to integrate deep links from SDDL easily in iOS apps.'
   spec.homepage     = 'https://github.com/nonanerz/ssdl-ios-sdk'
@@ -14,6 +14,7 @@ Pod::Spec.new do |spec|
   spec.exclude_files = ['SDDLSDK/SDDLSDK.docc', '.idea', '.git', '.DS_Store']
   spec.frameworks   = 'Foundation', 'UIKit'
   spec.requires_arc = true
+  spec.static_framework = true
   spec.swift_versions = ['5.0']
   spec.pod_target_xcconfig = {
     'BUILD_LIBRARY_FOR_DISTRIBUTION' => 'YES',
