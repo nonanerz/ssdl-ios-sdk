@@ -3,78 +3,53 @@ import UIKit
 
 public class SDDLSDKManager {
 
+    /// Fetches deep link details using the Universal Link flow.
+    /// - Parameters:
+    ///   - url: The universal link URL passed to the app (if available).
+    ///   - completion: A closure called with the fetched details or nil on failure.
     public static func fetchDetails(from url: URL? = nil, completion: @escaping (Any?) -> Void) {
-        guard let tryDetailsURL = URL(string: "https://sddl.me/api/try/details") else {
-            fallbackFetchDetails(from: url, completion: completion)
-            return
-        }
-        
-        let task = URLSession.shared.dataTask(with: tryDetailsURL) { data, response, error in
-            if let error = error {
-                fallbackFetchDetails(from: url, completion: completion)
-                return
-            }
-            
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-                fallbackFetchDetails(from: url, completion: completion)
-                return
-            }
-            
-            guard let data = data else {
-                fallbackFetchDetails(from: url, completion: completion)
-                return
-            }
-            
-            do {
-                let jsonData = try JSONSerialization.jsonObject(with: data, options: [])
-                DispatchQueue.main.async {
-                    completion(jsonData)
-                }
-            } catch {
-                fallbackFetchDetails(from: url, completion: completion)
-            }
-        }
-        task.resume()
-    }
-    
-    private static func fallbackFetchDetails(from url: URL?, completion: @escaping (Any?) -> Void) {
-        var identifier: String? = nil
-        
         if let url = url {
-            let path = url.host ?? url.path
-            if !path.isEmpty {
-                identifier = path.replacingOccurrences(of: "/", with: "")
+            // Extract the deep link key from the URL's last path component.
+            let identifier = url.lastPathComponent
+            fetchDetails(with: identifier, completion: completion)
+        } else {
+            // If no URL is provided, you may choose to call a default endpoint or simply return nil.
+            // Here we call a default endpoint.
+            guard let tryDetailsURL = URL(string: "https://sddl.me/api/try/details") else {
+                DispatchQueue.main.async { completion(nil) }
+                return
             }
-        }
-        
-        if identifier == nil, UIPasteboard.general.hasStrings {
-            if let clipboardText = UIPasteboard.general.string, !clipboardText.isEmpty {
-                identifier = clipboardText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let task = URLSession.shared.dataTask(with: tryDetailsURL) { data, response, error in
+                if error != nil || data == nil {
+                    DispatchQueue.main.async { completion(nil) }
+                    return
+                }
+                do {
+                    let jsonData = try JSONSerialization.jsonObject(with: data!, options: [])
+                    DispatchQueue.main.async {
+                        completion(jsonData)
+                    }
+                } catch {
+                    DispatchQueue.main.async { completion(nil) }
+                }
             }
+            task.resume()
         }
-        
-        guard let id = identifier else {
-            DispatchQueue.main.async { completion(nil) }
-            return
-        }
-        
-        let urlString = "https://sddl.me/api/\(id)/details"
+    }
+
+    private static func fetchDetails(with identifier: String, completion: @escaping (Any?) -> Void) {
+        let urlString = "https://sddl.me/api/\(identifier)/details"
         guard let detailsURL = URL(string: urlString) else {
             DispatchQueue.main.async { completion(nil) }
             return
         }
-        
-        let detailsTask = URLSession.shared.dataTask(with: detailsURL) { data, response, error in
-            if let error = error {
-                DispatchQueue.main.async { completion(nil) }
-                return
-            }
-            guard let data = data else {
+        let task = URLSession.shared.dataTask(with: detailsURL) { data, response, error in
+            if error != nil || data == nil {
                 DispatchQueue.main.async { completion(nil) }
                 return
             }
             do {
-                let json = try JSONSerialization.jsonObject(with: data, options: [])
+                let json = try JSONSerialization.jsonObject(with: data!, options: [])
                 DispatchQueue.main.async {
                     completion(json)
                 }
@@ -82,6 +57,6 @@ public class SDDLSDKManager {
                 DispatchQueue.main.async { completion(nil) }
             }
         }
-        detailsTask.resume()
+        task.resume()
     }
 }

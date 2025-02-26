@@ -1,10 +1,12 @@
 # SDDL iOS SDK
 
-This is the official iOS SDK for SDDL, providing seamless integration with deferred deep links.
+This is the official iOS SDK for SDDL, providing seamless integration with deferred deep links using **Universal Links** and **Custom URI Schemes**.
 
-## Integration with CocoaPods
+---
 
-### Step 1: Add CocoaPods Dependency
+## 🚀 **Integration Steps**
+
+### 📦 **Step 1: Add CocoaPods Dependency**
 Add the SDDLSDK dependency to your `Podfile`:
 
 ```ruby
@@ -12,11 +14,11 @@ platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'SDDLSDK', '~> 1.0.16'
+  pod 'SDDLSDK', '~> 1.1.0'
 end
 ```
 
-> Replace `1.0.16` with the latest release version.
+> Replace `1.1.0` with the latest release version.
 
 Then, run:
 
@@ -24,38 +26,74 @@ Then, run:
 pod install
 ```
 
-## Usage
+---
 
-### Initialize SDK in SwiftUI App
-In your `ContentView.swift`:
+## 📲 **App Links Setup**
+
+### 🔍 **1. Configure Associated Domains in Xcode:**
+
+1. Go to **Target > Signing & Capabilities > + Capability**.
+2. Add **Associated Domains**.
+3. Add the following domain:
+
+```plaintext
+applinks:sddl.me
+```
+
+---
+
+### 🌐 **2. Configure App ID in Apple Developer Console:**
+
+1. Navigate to **Certificates, Identifiers & Profiles** > **Identifiers**.
+2. Select the **App ID** associated with your **Bundle Identifier**.
+3. Enable **Associated Domains**.
+4. Regenerate and download the **Provisioning Profile**.
+5. Ensure the profile is updated in **Xcode**.
+
+---
+
+The response should be **HTTP/2 200** with **content-type: application/json**.
+
+---
+
+## 🧑‍💻 **Usage Example** (SwiftUI Only)
+
+### **ContentView.swift:**
 
 ```swift
 import SwiftUI
 import SDDLSDK
 
 struct ContentView: View {
-    @State private var result: String = "Get data"
-    @State private var incomingURL: URL?
+    @State private var result: String = "Waiting for Universal Link..."
 
     var body: some View {
         VStack {
+            Image(systemName: "globe")
+                .imageScale(.large)
+                .foregroundStyle(.tint)
+            Text("Hello, world!")
+                .font(.largeTitle)
+            
             Text(result)
                 .padding()
-
-            Button("Fetch Data from SDDLSDK") {
-                SDDLSDKManager.fetchDetails(from: incomingURL) { data in
-                    if let json = data as? [String: Any] {
-                        result = "Data: \(json)"
-                    } else {
-                        result = "Failed to fetch data"
-                    }
-                }
-            }
-            .padding()
+                .foregroundColor(.blue)
         }
         .onOpenURL { url in
-            incomingURL = url
+            print("🔗 Opened with URL: \(url.absoluteString)")
+            result = "Received URL: \(url.absoluteString)"
+            
+            SDDLSDKManager.fetchDetails(from: url) { data in
+                if let json = data as? [String: Any] {
+                    print("📦 Fetched Data: \(json)")
+                    result = "Data: \(json)"
+                } else {
+                    print("❌ Failed to fetch data or no data received")
+                    result = "Failed to fetch data"
+                }
+            }
         }
+        .padding()
     }
 }
 
@@ -64,17 +102,31 @@ struct ContentView: View {
 }
 ```
 
-### Custom URI Scheme Support
-Add your custom URI scheme to your Xcode project:
+---
 
-1. Open `Info.plist`.
-2. Add a new `URL types` entry.
-3. Set the `URL identifier` and `URL Schemes` to your desired scheme (e.g., `mycustomscheme`).
+## 🔗 **Custom URI Scheme Support**
 
-## License
-This SDK is licensed under the MIT License.
+1. Open **Info.plist**.
+2. Add a new **URL types** entry:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>mycustomscheme</string>
+        </array>
+    </dict>
+</array>
+```
 
 ---
 
-For more details, visit [GitHub Repository](https://github.com/nonanerz/ssdl-ios-sdk).
+## 📄 **License**
+This SDK is licensed under the MIT License.
+
+For more details, visit [GitHub Repository](https://github.com/nonanerz/sddl-ios-sdk).
 
