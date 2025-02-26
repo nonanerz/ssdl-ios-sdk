@@ -39,6 +39,11 @@ pod install
 ```plaintext
 applinks:sddl.me
 ```
+###  **Use developer mode while developing**
+
+```plaintext
+applinks:sddl.me?mode=developer
+```
 
 ---
 
