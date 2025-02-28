@@ -14,11 +14,11 @@ platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'SDDLSDK', '~> 1.1.0'
+  pod 'SDDLSDK', '~> 1.1.1'
 end
 ```
 
-> Replace `1.1.0` with the latest release version.
+> Replace `1.1.1` with the latest release version.
 
 Then, run:
 

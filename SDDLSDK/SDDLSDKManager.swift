@@ -1,6 +1,3 @@
-import Foundation
-import UIKit
-
 public class SDDLSDKManager {
 
     /// Fetches deep link details using the Universal Link flow.
@@ -11,10 +8,9 @@ public class SDDLSDKManager {
         if let url = url {
             // Extract the deep link key from the URL's last path component.
             let identifier = url.lastPathComponent
-            fetchDetails(with: identifier, completion: completion)
+            let queryParams = url.query ?? ""
+            fetchDetails(with: identifier, queryParams: queryParams, completion: completion)
         } else {
-            // If no URL is provided, you may choose to call a default endpoint or simply return nil.
-            // Here we call a default endpoint.
             guard let tryDetailsURL = URL(string: "https://sddl.me/api/try/details") else {
                 DispatchQueue.main.async { completion(nil) }
                 return
@@ -37,12 +33,17 @@ public class SDDLSDKManager {
         }
     }
 
-    private static func fetchDetails(with identifier: String, completion: @escaping (Any?) -> Void) {
-        let urlString = "https://sddl.me/api/\(identifier)/details"
+    private static func fetchDetails(with identifier: String, queryParams: String, completion: @escaping (Any?) -> Void) {
+        var urlString = "https://sddl.me/api/\(identifier)/details"
+        if !queryParams.isEmpty {
+            urlString += "?\(queryParams)"
+        }
+
         guard let detailsURL = URL(string: urlString) else {
             DispatchQueue.main.async { completion(nil) }
             return
         }
+
         let task = URLSession.shared.dataTask(with: detailsURL) { data, response, error in
             if error != nil || data == nil {
                 DispatchQueue.main.async { completion(nil) }
