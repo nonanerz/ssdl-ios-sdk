@@ -79,26 +79,36 @@ struct ContentView: View {
                 .foregroundStyle(.tint)
             Text("Hello, world!")
                 .font(.largeTitle)
-            
+
             Text(result)
                 .padding()
                 .foregroundColor(.blue)
         }
         .onOpenURL { url in
-            print("🔗 Opened with URL: \(url.absoluteString)")
-            result = "Received URL: \(url.absoluteString)"
-            
-            SDDLSDKManager.fetchDetails(from: url) { data in
-                if let json = data as? [String: Any] {
-                    print("📦 Fetched Data: \(json)")
-                    result = "Data: \(json)"
-                } else {
-                    print("❌ Failed to fetch data or no data received")
-                    result = "Failed to fetch data"
-                }
-            }
+            handleDeepLink(url)
+        }
+        .onAppear {
+            handleDeepLink(nil) // Check for deferred deep link when app starts
         }
         .padding()
+    }
+
+    /// Handles incoming deep links and deferred deep links
+    private func handleDeepLink(_ url: URL?) {
+        if let url = url {
+            result = "Received URL: \(url.absoluteString)"
+        } else {
+            result = "Checking for deferred deep link..."
+        }
+
+        // Fetch deep link details from SDDLSDKManager
+        SDDLSDKManager.fetchDetails(from: url) { data in
+            if let json = data as? [String: Any] {
+                result = "Data: \(json)"
+            } else {
+                result = "Failed to fetch data"
+            }
+        }
     }
 }
 
