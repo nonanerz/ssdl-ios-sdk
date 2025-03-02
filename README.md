@@ -95,12 +95,6 @@ struct ContentView: View {
 
     /// Handles incoming deep links and deferred deep links
     private func handleDeepLink(_ url: URL?) {
-        if let url = url {
-            result = "Received URL: \(url.absoluteString)"
-        } else {
-            result = "Checking for deferred deep link..."
-        }
-
         // Fetch deep link details from SDDLSDKManager
         SDDLSDKManager.fetchDetails(from: url) { data in
             if let json = data as? [String: Any] {
