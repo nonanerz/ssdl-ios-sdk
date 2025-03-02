@@ -7,7 +7,12 @@ public class SDDLSDKManager {
     public static func fetchDetails(from url: URL? = nil, completion: @escaping (Any?) -> Void) {
         if let url = url {
             // Extract the deep link key from the URL's last path component.
-            let identifier = url.lastPathComponent
+            var identifier = url.lastPathComponent
+
+            if identifier.isEmpty {
+                identifier = url.host ?? ""
+            }
+
             let queryParams = url.query ?? ""
             fetchDetails(with: identifier, queryParams: queryParams, completion: completion)
         } else {
