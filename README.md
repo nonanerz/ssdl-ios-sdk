@@ -14,11 +14,11 @@ platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'SDDLSDK', '~> 1.1.1'
+  pod 'SDDLSDK', '~> 1.1.2'
 end
 ```
 
-> Replace `1.1.1` with the latest release version.
+> Replace `1.1.2` with the latest release version.
 
 Then, run:
 
@@ -37,12 +37,12 @@ pod install
 3. Add the following domain:
 
 ```plaintext
-applinks:sddl.me
+applinks:{YOUR_ID}.sddl.me
 ```
 ###  **Use developer mode while developing**
 
 ```plaintext
-applinks:sddl.me?mode=developer
+applinks:{YOUR_ID}.sddl.me?mode=developer
 ```
 
 ---
