@@ -37,12 +37,12 @@ pod install
 3. Add the following domain:
 
 ```plaintext
-applinks:{YOUR_ID}.sddl.me
+applinks:sddl.me
 ```
 ###  **Use developer mode while developing**
 
 ```plaintext
-applinks:{YOUR_ID}.sddl.me?mode=developer
+applinks:sddl.me?mode=developer
 ```
 
 ---
