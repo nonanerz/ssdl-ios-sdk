@@ -87,15 +87,19 @@ struct ContentView: View {
         .onOpenURL { url in
             handleDeepLink(url)
         }
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+            if let incomingURL = userActivity.webpageURL {
+                handleDeepLink(incomingURL)
+            }
+        }
         .onAppear {
-            handleDeepLink(nil) // Check for deferred deep link when app starts
+            handleDeepLink(nil)
         }
         .padding()
     }
 
-    /// Handles incoming deep links and deferred deep links
     private func handleDeepLink(_ url: URL?) {
-        // Fetch deep link details from SDDLSDKManager
+
         SDDLSDKManager.fetchDetails(from: url) { data in
             if let json = data as? [String: Any] {
                 result = "Data: \(json)"
@@ -109,6 +113,7 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
 ```
 
 ---
