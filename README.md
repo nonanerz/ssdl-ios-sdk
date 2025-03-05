@@ -116,6 +116,10 @@ struct ContentView: View {
 
 ```
 
+### Note:
+    
+#### If no URL is available at launch, pass nil as the argument to handleDeepLink(_:) so that the SDK can handle deferred deep links appropriately.
+
 ---
 
 ## 🔗 **Custom URI Scheme Support**
