@@ -6,7 +6,7 @@ This is the official iOS SDK for SDDL, providing seamless integration with defer
 
 ## 🚀 **Integration Steps**
 
-### 📦 **Step 1: Add CocoaPods Dependency**
+### 📦 **Add CocoaPods Dependency**
 Add the SDDLSDK dependency to your `Podfile`:
 
 ```ruby
@@ -30,7 +30,7 @@ pod install
 
 ## 📲 **App Links Setup**
 
-### 🔍 **1. Configure Associated Domains in Xcode:**
+### 🔍 **Configure Associated Domains in Xcode:**
 
 1. Go to **Target > Signing & Capabilities > + Capability**.
 2. Add **Associated Domains**.
@@ -47,21 +47,7 @@ applinks:{YOUR ID}.sddl.me?mode=developer
 
 ---
 
-### 🌐 **2. Configure App ID in Apple Developer Console:**
-
-1. Navigate to **Certificates, Identifiers & Profiles** > **Identifiers**.
-2. Select the **App ID** associated with your **Bundle Identifier**.
-3. Enable **Associated Domains**.
-4. Regenerate and download the **Provisioning Profile**.
-5. Ensure the profile is updated in **Xcode**.
-
----
-
-The response should be **HTTP/2 200** with **content-type: application/json**.
-
----
-
-## 🧑‍💻 **Usage Example** (SwiftUI Only)
+## 🧑‍💻 **Usage Example**
 
 ### **ContentView.swift:**
 
