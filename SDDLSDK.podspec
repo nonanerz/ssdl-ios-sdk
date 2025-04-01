@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = 'SDDLSDK'
-  spec.version      = '1.1.3'
+  spec.version      = '1.2.1'
   spec.summary      = 'iOS SDK for SDDL deep links integration'
   spec.description  = 'SDDLSDK helps to integrate deep links from SDDL easily in iOS apps.'
   spec.homepage     = 'https://github.com/nonanerz/ssdl-ios-sdk'
