@@ -39,10 +39,9 @@ pod install
 ```plaintext
 applinks:{YOUR ID}.sddl.me
 ```
-###  **Use developer mode while developing**
-
+or
 ```plaintext
-applinks:{YOUR ID}.sddl.me?mode=developer
+applinks:{your.custom.domain}
 ```
 
 ---
