@@ -131,5 +131,4 @@ struct ContentView: View {
 ## 📄 **License**
 This SDK is licensed under the MIT License.
 
-For more details, visit [GitHub Repository](https://github.com/nonanerz/sddl-ios-sdk).
-
+Powered by [sddl.me](https://sddl.me) — deep linking API.
