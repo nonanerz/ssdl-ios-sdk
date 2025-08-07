@@ -1,5 +1,10 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+#if canImport(UIKit)
 import UIKit
+#endif
 
 public class SDDLSDKManager {
 
@@ -14,33 +19,36 @@ public class SDDLSDKManager {
             let queryParams = url.query ?? ""
             fetchDetails(with: identifier, queryParams: queryParams, completion: completion)
         } else {
-            // Check clipboard
+            // Check clipboard if available
+#if canImport(UIKit)
             if let clipboardText = UIPasteboard.general.string,
                isValidKey(clipboardText) {
                 fetchDetails(with: clipboardText, queryParams: "", completion: completion)
-            } else {
-                // fallback
-                guard let tryDetailsURL = URL(string: "https://sddl.me/api/try/details") else {
+                return
+            }
+#endif
+
+            // fallback
+            guard let tryDetailsURL = URL(string: "https://sddl.me/api/try/details") else {
+                DispatchQueue.main.async { completion(nil) }
+                return
+            }
+
+            let task = URLSession.shared.dataTask(with: tryDetailsURL) { data, response, error in
+                if error != nil || data == nil {
                     DispatchQueue.main.async { completion(nil) }
                     return
                 }
-
-                let task = URLSession.shared.dataTask(with: tryDetailsURL) { data, response, error in
-                    if error != nil || data == nil {
-                        DispatchQueue.main.async { completion(nil) }
-                        return
+                do {
+                    let jsonData = try JSONSerialization.jsonObject(with: data!, options: [])
+                    DispatchQueue.main.async {
+                        completion(jsonData)
                     }
-                    do {
-                        let jsonData = try JSONSerialization.jsonObject(with: data!, options: [])
-                        DispatchQueue.main.async {
-                            completion(jsonData)
-                        }
-                    } catch {
-                        DispatchQueue.main.async { completion(nil) }
-                    }
+                } catch {
+                    DispatchQueue.main.async { completion(nil) }
                 }
-                task.resume()
             }
+            task.resume()
         }
     }
 
