@@ -14,11 +14,11 @@ platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'SDDLSDK', '~> 1.2.1'
+  pod 'SDDLSDK', '~> 2.0.0'
 end
 ```
 
-> Replace `1.2.1` with the latest release version.
+> Replace `2.0.0` with the latest release version.
 
 Then, run:
 
@@ -51,54 +51,38 @@ applinks:{your.custom.domain}
 ### **ContentView.swift:**
 
 ```swift
-import SwiftUI
+import UIKit
 import SDDLSDK
 
-struct ContentView: View {
-    @State private var result: String = "Waiting for Universal Link..."
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
 
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-                .font(.largeTitle)
+    func scene(_ scene: UIScene,
+               willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
 
-            Text(result)
-                .padding()
-                .foregroundColor(.blue)
-        }
-        .onOpenURL { url in
-            handleDeepLink(url)
-        }
-        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
-            if let incomingURL = userActivity.webpageURL {
-                handleDeepLink(incomingURL)
-            }
-        }
-        .onAppear {
-            handleDeepLink(nil)
-        }
-        .padding()
+        let url = connectionOptions.urlContexts.first?.url
+            ?? connectionOptions.userActivities.first?.webpageURL
+
+        SDDLHelper.resolve(from: url,
+                           onSuccess: route(with:),
+                           onError: handleDeepLinkError(_:))
     }
 
-    private func handleDeepLink(_ url: URL?) {
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        SDDLHelper.resolve(from: userActivity,
+                           onSuccess: route(with:),
+                           onError: handleDeepLinkError(_:))
+    }
 
-        SDDLSDKManager.fetchDetails(from: url) { data in
-            if let json = data as? [String: Any] {
-                result = "Data: \(json)"
-            } else {
-                result = "Failed to fetch data"
-            }
-        }
+    private func route(with payload: [String: Any]) {
+        // do stuff
+    }
+
+    private func handleDeepLinkError(_ error: String) {
+        // handle Error
     }
 }
-
-#Preview {
-    ContentView()
-}
-
 ```
 
 ### Note:

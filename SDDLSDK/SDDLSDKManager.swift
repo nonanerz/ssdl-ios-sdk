@@ -1,87 +1,172 @@
 import Foundation
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
 #if canImport(UIKit)
 import UIKit
 #endif
 
-public class SDDLSDKManager {
+public enum SDDLError: Error {
+    case invalidJSON(String)
+    case http(Int)
+    case network(String)
+}
 
-    public static func fetchDetails(from url: URL? = nil, completion: @escaping (Any?) -> Void) {
-        if let url = url {
-            // Extract the deep link key from the URL's last path component.
-            var identifier = url.lastPathComponent
-            if identifier.isEmpty {
-                identifier = url.host ?? ""
-            }
+public final class SDDLSDKManager {
 
-            let queryParams = url.query ?? ""
-            fetchDetails(with: identifier, queryParams: queryParams, completion: completion)
-        } else {
-            // Check clipboard if available
-#if canImport(UIKit)
-            if let clipboardText = UIPasteboard.general.string,
-               isValidKey(clipboardText) {
-                fetchDetails(with: clipboardText, queryParams: "", completion: completion)
-                return
-            }
-#endif
-
-            // fallback
-            guard let tryDetailsURL = URL(string: "https://sddl.me/api/try/details") else {
-                DispatchQueue.main.async { completion(nil) }
-                return
-            }
-
-            let task = URLSession.shared.dataTask(with: tryDetailsURL) { data, response, error in
-                if error != nil || data == nil {
-                    DispatchQueue.main.async { completion(nil) }
-                    return
-                }
-                do {
-                    let jsonData = try JSONSerialization.jsonObject(with: data!, options: [])
-                    DispatchQueue.main.async {
-                        completion(jsonData)
-                    }
-                } catch {
-                    DispatchQueue.main.async { completion(nil) }
-                }
-            }
-            task.resume()
-        }
-    }
-
-    private static func isValidKey(_ text: String) -> Bool {
-        let pattern = "^[a-zA-Z0-9]{3,32}$"
-        return text.range(of: pattern, options: .regularExpression) != nil
-    }
-
-    private static func fetchDetails(with identifier: String, queryParams: String, completion: @escaping (Any?) -> Void) {
-        var urlString = "https://sddl.me/api/\(identifier)/details"
-        if !queryParams.isEmpty {
-            urlString += "?\(queryParams)"
+    // MARK: - Public API
+    public static func fetchDetails(
+        from url: URL? = nil,
+        onSuccess: @escaping ([String: Any]) -> Void,
+        onError: @escaping (String) -> Void = { _ in }
+    ) {
+        // single-flight guard
+        lock.sync {
+            if resolving { return }
+            resolving = true
         }
 
-        guard let detailsURL = URL(string: urlString) else {
-            DispatchQueue.main.async { completion(nil) }
+        // 1) UL/AL
+        if let key = extractIdentifier(from: url) {
+            getDetails(key: key, query: url?.query, onSuccess: onSuccess, onError: onError)
             return
         }
 
-        let task = URLSession.shared.dataTask(with: detailsURL) { data, response, error in
-            if error != nil || data == nil {
-                DispatchQueue.main.async { completion(nil) }
+        // 2) Clipboard fallback
+        #if canImport(UIKit)
+        if let clip = UIPasteboard.general.string, isValidKey(clip) {
+            getDetails(key: clip, query: nil, onSuccess: onSuccess, onError: onError)
+            return
+        }
+        #endif
+
+        getTryDetails(onSuccess: onSuccess, onError: onError)
+    }
+
+    // MARK: - Backward compatibility
+    public static func fetchDetails(from url: URL? = nil, completion: @escaping (Any?) -> Void) {
+        fetchDetails(from: url, onSuccess: { dict in
+            completion(dict)
+        }, onError: { _ in
+            completion(nil)
+        })
+    }
+
+    // MARK: - Internals
+
+    private static let lock = DispatchQueue(label: "sddl.sdk.lock")
+    private static var resolving = false
+
+    private static let session: URLSession = {
+        let cfg = URLSessionConfiguration.default
+        cfg.timeoutIntervalForRequest = 5
+        cfg.timeoutIntervalForResource = 5
+        return URLSession(configuration: cfg)
+    }()
+
+    private static func extractIdentifier(from url: URL?) -> String? {
+        guard let url = url else { return nil }
+        let segments = url.path.split(separator: "/").map(String.init)
+        if let first = segments.first, isValidKey(first) {
+            return first
+        }
+        if let host = url.host, isValidKey(host) {
+            return host
+        }
+        return nil
+    }
+
+    private static func isValidKey(_ s: String) -> Bool {
+        let pattern = "^[A-Za-z0-9_-]{4,64}$"
+        return s.range(of: pattern, options: .regularExpression) != nil
+    }
+
+    private static func buildDetailsURL(key: String, query: String?) -> URL? {
+        var urlString = "https://sddl.me/api/\(key)/details"
+        if let q = query, !q.isEmpty {
+            urlString += "?\(q)"
+        }
+        return URL(string: urlString)
+    }
+
+    private static func getDetails(
+        key: String,
+        query: String?,
+        onSuccess: @escaping ([String: Any]) -> Void,
+        onError: @escaping (String) -> Void
+    ) {
+        guard let detailsURL = buildDetailsURL(key: key, query: query) else {
+            finish(); onError("Invalid details URL"); return
+        }
+
+        var req = URLRequest(url: detailsURL)
+        req.setValue("SDDLSDK-iOS/1.0", forHTTPHeaderField: "User-Agent")
+
+        session.dataTask(with: req) { data, resp, err in
+            defer { finish() }
+            if let err = err {
+                onError("Network error: \(err.localizedDescription)")
                 return
             }
-            do {
-                let json = try JSONSerialization.jsonObject(with: data!, options: [])
-                DispatchQueue.main.async {
-                    completion(json)
-                }
-            } catch {
-                DispatchQueue.main.async { completion(nil) }
+            guard let http = resp as? HTTPURLResponse, let data = data else {
+                onError("No response"); return
             }
+
+            switch http.statusCode {
+            case 200:
+                do {
+                    if let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        DispatchQueue.main.async { onSuccess(dict) }
+                    } else {
+                        onError("Parse error: not a JSON object")
+                    }
+                } catch {
+                    onError("Parse error: \(error.localizedDescription)")
+                }
+
+            case 404, 410:
+                getTryDetails(onSuccess: onSuccess, onError: onError)
+
+            default:
+                onError("HTTP \(http.statusCode)")
+            }
+        }.resume()
+    }
+
+    private static func getTryDetails(
+        onSuccess: @escaping ([String: Any]) -> Void,
+        onError: @escaping (String) -> Void
+    ) {
+        guard let url = URL(string: "https://sddl.me/api/try/details") else {
+            finish(); onError("Invalid try/details URL"); return
         }
-        task.resume()
+        var req = URLRequest(url: url)
+        req.setValue("SDDLSDK-iOS/1.0", forHTTPHeaderField: "User-Agent")
+
+        session.dataTask(with: req) { data, resp, err in
+            defer { finish() }
+            if let err = err {
+                onError("Network error: \(err.localizedDescription)")
+                return
+            }
+            guard let http = resp as? HTTPURLResponse, let data = data else {
+                onError("No response"); return
+            }
+
+            if http.statusCode == 200 {
+                do {
+                    if let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        DispatchQueue.main.async { onSuccess(dict) }
+                    } else {
+                        onError("Parse error: not a JSON object")
+                    }
+                } catch {
+                    onError("Parse error: \(error.localizedDescription)")
+                }
+            } else {
+                onError("TRY \(http.statusCode)")
+            }
+        }.resume()
+    }
+
+    private static func finish() {
+        lock.sync { resolving = false }
     }
 }
