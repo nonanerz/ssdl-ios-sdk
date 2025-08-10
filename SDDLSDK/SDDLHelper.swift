@@ -2,19 +2,18 @@ import Foundation
 
 public enum SDDLHelper {
     public static func resolve(
-        url: URL? = nil,
-        activity: NSUserActivity? = nil,
+        _ url: URL? = nil,
         onSuccess: @escaping ([String: Any]) -> Void,
         onError: @escaping (String) -> Void = { _ in }
     ) {
-        let ul: URL? = {
-            if let u = url { return u }
-            if activity?.activityType == NSUserActivityTypeBrowsingWeb {
-                return activity?.webpageURL
+        SDDLSDKManager.fetchDetails(
+            from: url,
+            onSuccess: { payload in
+                onSuccess(payload)
+            },
+            onError: { message in
+                DispatchQueue.main.async { onError(message) }
             }
-            return nil
-        }()
-
-        SDDLSDKManager.fetchDetails(from: ul, onSuccess: onSuccess, onError: onError)
+        )
     }
 }

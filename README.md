@@ -57,18 +57,17 @@ import SDDLSDK
 struct ContentView: View {
     var body: some View {
         Color.clear
+            // Universal Link received
             .onOpenURL { url in
-                SDDLHelper.resolve(from: url,
-                                   onSuccess: handlePayload(_:),
-                                   onError: handleError(_:))
+                SDDLHelper.resolve(url, onSuccess: handlePayload(_:), onError: handleError(_:))
             }
+        // Universal Link received with NSUserActivity
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
-                SDDLHelper.resolve(from: activity,
-                                   onSuccess: handlePayload(_:),
-                                   onError: handleError(_:))
+                SDDLHelper.resolve(activity.webpageURL, onSuccess: handlePayload(_:), onError: handleError(_:))
             }
+            // Cold-start (nil)
             .onAppear {
-                SDDLHelper.resolve(from:nil, onSuccess: handlePayload(_:), onError: handleError(_:))
+                SDDLHelper.resolve(nil, onSuccess: handlePayload(_:), onError: handleError(_:))
             }
     }
 }
@@ -79,7 +78,6 @@ private func handlePayload(_ payload: [String: Any]) {
 private func handleError(_ error: String) {
     print("SDDL error:", error)
 }
-
 ```
 
 ### Note:
