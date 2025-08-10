@@ -4,9 +4,9 @@ This is the official iOS SDK for SDDL, providing seamless integration with defer
 
 ---
 
-## 🚀 **Integration Steps**
+## **Integration Steps**
 
-### 📦 **Add CocoaPods Dependency**
+### **Add CocoaPods Dependency**
 Add the SDDLSDK dependency to your `Podfile`:
 
 ```ruby
@@ -28,9 +28,9 @@ pod install
 
 ---
 
-## 📲 **App Links Setup**
+##  **App Links Setup**
 
-### 🔍 **Configure Associated Domains in Xcode:**
+###  **Configure Associated Domains in Xcode:**
 
 1. Go to **Target > Signing & Capabilities > + Capability**.
 2. Add **Associated Domains**.
@@ -46,7 +46,7 @@ applinks:{your.custom.domain}
 
 ---
 
-## 🧑‍💻 **Usage Example**
+##  **Usage Example**
 
 ### **ContentView.swift:**
 
@@ -82,28 +82,7 @@ private func handleError(_ error: String) {
 
 ### Note:
     
-#### If no URL is available at launch, pass nil as the argument to handleDeepLink(_:) so that the SDK can handle deferred deep links appropriately.
-
----
-
-## 🔗 **Custom URI Scheme Support**
-
-1. Open **Info.plist**.
-2. Add a new **URL types** entry:
-
-```xml
-<key>CFBundleURLTypes</key>
-<array>
-    <dict>
-        <key>CFBundleTypeRole</key>
-        <string>Editor</string>
-        <key>CFBundleURLSchemes</key>
-        <array>
-            <string>mycustomscheme</string>
-        </array>
-    </dict>
-</array>
-```
+#### If no URL is available at launch, pass nil as the argument to resolve(_:) so that the SDK can handle deferred deep links appropriately.
 
 ---
 
