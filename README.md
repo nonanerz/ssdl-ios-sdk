@@ -14,11 +14,11 @@ platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'SDDLSDK', '~> 2.0.0'
+  pod 'SDDLSDK', '~> 2.0.1'
 end
 ```
 
-> Replace `2.0.0` with the latest release version.
+> Replace `2.0.1` with the latest release version.
 
 Then, run:
 
@@ -51,38 +51,35 @@ applinks:{your.custom.domain}
 ### **ContentView.swift:**
 
 ```swift
-import UIKit
+import SwiftUI
 import SDDLSDK
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-    var window: UIWindow?
-
-    func scene(_ scene: UIScene,
-               willConnectTo session: UISceneSession,
-               options connectionOptions: UIScene.ConnectionOptions) {
-
-        let url = connectionOptions.urlContexts.first?.url
-            ?? connectionOptions.userActivities.first?.webpageURL
-
-        SDDLHelper.resolve(from: url,
-                           onSuccess: route(with:),
-                           onError: handleDeepLinkError(_:))
-    }
-
-    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        SDDLHelper.resolve(from: userActivity,
-                           onSuccess: route(with:),
-                           onError: handleDeepLinkError(_:))
-    }
-
-    private func route(with payload: [String: Any]) {
-        // do stuff
-    }
-
-    private func handleDeepLinkError(_ error: String) {
-        // handle Error
+struct ContentView: View {
+    var body: some View {
+        Color.clear
+            .onOpenURL { url in
+                SDDLHelper.resolve(from: url,
+                                   onSuccess: handlePayload(_:),
+                                   onError: handleError(_:))
+            }
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                SDDLHelper.resolve(from: activity,
+                                   onSuccess: handlePayload(_:),
+                                   onError: handleError(_:))
+            }
+            .onAppear {
+                SDDLHelper.resolve(from:nil, onSuccess: handlePayload(_:), onError: handleError(_:))
+            }
     }
 }
+
+private func handlePayload(_ payload: [String: Any]) {
+    print("SDDL payload:", payload)
+}
+private func handleError(_ error: String) {
+    print("SDDL error:", error)
+}
+
 ```
 
 ### Note:
