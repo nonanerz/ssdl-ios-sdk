@@ -101,6 +101,8 @@ public final class SDDLSDKManager {
         return URLSession(configuration: cfg)
     }()
 
+    // MARK: - Networking
+
     private static func getDetails(
         key: String,
         query: String?,
@@ -112,7 +114,7 @@ public final class SDDLSDKManager {
         }
 
         var req = URLRequest(url: detailsURL)
-        req.setValue("SDDLSDK-iOS/1.0", forHTTPHeaderField: "User-Agent")
+        addCommonHeaders(to: &req)
 
         session.dataTask(with: req) { data, resp, err in
             defer { finish() }
@@ -150,7 +152,7 @@ public final class SDDLSDKManager {
             finish(); deliverError("Invalid try/details URL", onError); return
         }
         var req = URLRequest(url: url)
-        req.setValue("SDDLSDK-iOS/1.0", forHTTPHeaderField: "User-Agent")
+        addCommonHeaders(to: &req)
 
         session.dataTask(with: req) { data, resp, err in
             defer { finish() }
@@ -175,6 +177,16 @@ public final class SDDLSDKManager {
                 deliverError("TRY \(http.statusCode)", onError)
             }
         }.resume()
+    }
+
+    // MARK: - Common headers
+
+    private static func addCommonHeaders(to req: inout URLRequest) {
+        req.setValue("SDDLSDK-iOS/1.0", forHTTPHeaderField: "User-Agent")
+        if let bid = Bundle.main.bundleIdentifier, !bid.isEmpty {
+            req.setValue(bid, forHTTPHeaderField: "X-App-Identifier")
+        }
+        req.setValue("iOS", forHTTPHeaderField: "X-Device-Platform")
     }
 
     // MARK: - Helpers
