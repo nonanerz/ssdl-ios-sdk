@@ -9,9 +9,9 @@ public enum SDDLError: Error {
 
 public final class SDDLSDKManager {
 
-    // MARK: - Public API
     public static func fetchDetails(
         from url: URL? = nil,
+        readClipboard: Bool = true,
         onSuccess: @escaping ([String: Any]) -> Void,
         onError: @escaping (String) -> Void = { _ in }
     ) {
@@ -21,11 +21,9 @@ public final class SDDLSDKManager {
             resolveFromURL(url, onSuccess, onError)
             return
         }
-
-        scheduleColdStart(onSuccess, onError)
+        scheduleColdStart(readClipboard, onSuccess, onError)
     }
 
-    // MARK: - Orchestration
     private static func resolveFromURL(
         _ url: URL,
         _ onSuccess: @escaping ([String: Any]) -> Void,
@@ -39,6 +37,7 @@ public final class SDDLSDKManager {
     }
 
     private static func scheduleColdStart(
+        _ readClipboard: Bool,
         _ onSuccess: @escaping ([String: Any]) -> Void,
         _ onError: @escaping (String) -> Void
     ) {
@@ -47,14 +46,12 @@ public final class SDDLSDKManager {
                 if ulArrived || resolving { return }
                 resolving = true
             }
-
-            if let clipKey = readClipboardKey() {
+            if readClipboard, let clipKey = readClipboardKey() {
                 getDetails(key: clipKey, query: nil, onSuccess: onSuccess, onError: onError)
                 return
             }
             getTryDetails(onSuccess: onSuccess, onError: onError)
         }
-
         lock.sync {
             pendingCold?.cancel()
             pendingCold = work
@@ -62,7 +59,6 @@ public final class SDDLSDKManager {
         DispatchQueue.main.asyncAfter(deadline: .now() + coldStartDelay, execute: work)
     }
 
-    // MARK: - Concurrency & state
     private static let lock = DispatchQueue(label: "sddl.sdk.lock")
     private static var resolving = false
     private static var ulArrived = false
@@ -101,8 +97,6 @@ public final class SDDLSDKManager {
         return URLSession(configuration: cfg)
     }()
 
-    // MARK: - Networking
-
     private static func getDetails(
         key: String,
         query: String?,
@@ -112,10 +106,8 @@ public final class SDDLSDKManager {
         guard let detailsURL = buildDetailsURL(key: key, query: query) else {
             finish(); deliverError("Invalid details URL", onError); return
         }
-
         var req = URLRequest(url: detailsURL)
         addCommonHeaders(to: &req)
-
         session.dataTask(with: req) { data, resp, err in
             defer { finish() }
             if let err = err {
@@ -124,7 +116,6 @@ public final class SDDLSDKManager {
             guard let http = resp as? HTTPURLResponse, let data = data else {
                 deliverError("No response", onError); return
             }
-
             switch http.statusCode {
             case 200:
                 do {
@@ -153,7 +144,6 @@ public final class SDDLSDKManager {
         }
         var req = URLRequest(url: url)
         addCommonHeaders(to: &req)
-
         session.dataTask(with: req) { data, resp, err in
             defer { finish() }
             if let err = err {
@@ -162,7 +152,6 @@ public final class SDDLSDKManager {
             guard let http = resp as? HTTPURLResponse, let data = data else {
                 deliverError("No response", onError); return
             }
-
             if http.statusCode == 200 {
                 do {
                     if let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
@@ -179,8 +168,6 @@ public final class SDDLSDKManager {
         }.resume()
     }
 
-    // MARK: - Common headers
-
     private static func addCommonHeaders(to req: inout URLRequest) {
         req.setValue("SDDLSDK-iOS/1.0", forHTTPHeaderField: "User-Agent")
         if let bid = Bundle.main.bundleIdentifier, !bid.isEmpty {
@@ -188,8 +175,6 @@ public final class SDDLSDKManager {
         }
         req.setValue("iOS", forHTTPHeaderField: "X-Device-Platform")
     }
-
-    // MARK: - Helpers
 
     private static func extractIdentifier(from url: URL?) -> String? {
         guard let url = url else { return nil }
