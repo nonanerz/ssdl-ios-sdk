@@ -174,6 +174,19 @@ public final class SDDLSDKManager {
             req.setValue(bid, forHTTPHeaderField: "X-App-Identifier")
         }
         req.setValue("iOS", forHTTPHeaderField: "X-Device-Platform")
+        let osVersion = UIDevice.current.systemVersion
+        let tz = TimeZone.current.identifier
+        let lang = Locale.preferredLanguages.first ?? Locale.current.identifier
+
+        let scr = UIScreen.main
+        let cssW = Int(round(scr.nativeBounds.width  / scr.nativeScale))
+        let cssH = Int(round(scr.nativeBounds.height / scr.nativeScale))
+
+        req.setValue(String(cssW), forHTTPHeaderField: "X-Client-Screen-Width")
+        req.setValue(String(cssH), forHTTPHeaderField: "X-Client-Screen-Height")
+        req.setValue(lang,        forHTTPHeaderField: "X-Client-Language")
+        req.setValue(tz,          forHTTPHeaderField: "X-Client-Timezone")
+        req.setValue(osVersion,   forHTTPHeaderField: "X-Client-OS-Version")
     }
 
     private static func extractIdentifier(from url: URL?) -> String? {
