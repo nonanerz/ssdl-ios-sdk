@@ -41,10 +41,13 @@ public final class SDDLSDKManager {
         _ onSuccess: @escaping ([String: Any]) -> Void,
         _ onError: @escaping (String) -> Void
     ) {
+        if coldStartDone { return }
+
         let work = DispatchWorkItem {
             lock.sync {
                 if ulArrived || resolving { return }
                 resolving = true
+                if !coldStartDone { coldStartDone = true }
             }
             if readClipboard, let clipKey = readClipboardKey() {
                 getDetails(key: clipKey, query: nil, onSuccess: onSuccess, onError: onError)
@@ -219,5 +222,11 @@ public final class SDDLSDKManager {
 
     private static func deliverError(_ msg: String, _ onError: @escaping (String) -> Void) {
         DispatchQueue.main.async { onError(msg) }
+    }
+
+    private static let coldStartDoneKey = "sddl.coldstartDone.v1"
+    private static var coldStartDone: Bool {
+        get { UserDefaults.standard.bool(forKey: coldStartDoneKey) }
+        set { UserDefaults.standard.set(newValue, forKey: coldStartDoneKey) }
     }
 }
